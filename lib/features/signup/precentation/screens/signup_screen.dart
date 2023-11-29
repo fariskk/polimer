@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:polimer/features/profilepicture_selection/precentation/screens/profilepicture_selection.dart';
 import 'package:polimer/features/signin/precentation/screens/signin_screen.dart';
 import 'package:polimer/features/signup/precentation/widgets/signup_widgets.dart';
 
@@ -16,7 +17,12 @@ class SignupScreen extends StatelessWidget {
         shape: const CircleBorder(),
         child: IconButton(
           icon: Icon(Icons.arrow_forward),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ProfilepictureSlectionScreen()));
+          },
         ),
       ),
       body: Center(

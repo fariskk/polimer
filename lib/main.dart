@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:polimer/features/home_page/precentation/screens/homeScreen.dart';
 import 'package:polimer/features/language_selection/precentation/screens/language_selection_screen.dart';
 import 'package:polimer/features/signup/precentation/screens/signup_screen.dart';
 import 'package:polimer/features/spalsh_screeen/precentation/screens/splash_screen.dart';
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SignupScreen(),
+      home: HomeScreen(),
     );
   }
 }
