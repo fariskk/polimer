@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:polimer/features/home_page/precentation/widgets/homeScreen_widgets.dart';
+import 'package:polimer/features/new_chat/precentation/screens/newchat_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -43,7 +44,10 @@ class HomeScreen extends StatelessWidget {
         return userTile("faris kk", "", "where are you");
       }),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => NewchatScreen()));
+        },
         backgroundColor: Color.fromARGB(255, 255, 111, 0),
         child: Icon(Icons.message),
       ),
