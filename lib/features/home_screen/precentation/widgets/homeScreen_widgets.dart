@@ -9,8 +9,8 @@ Widget userTile(String name, String image, String lastMessage) {
     ),
     subtitle: Text(lastMessage),
     leading: CircleAvatar(
-      radius: 28,
-      child: Image.asset("assets/images/tempprofile.webp"),
+      radius: 22,
+      backgroundImage: AssetImage(image),
     ),
   );
 }

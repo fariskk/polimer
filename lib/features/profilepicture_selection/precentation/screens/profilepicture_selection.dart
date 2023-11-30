@@ -1,20 +1,32 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:polimer/features/home_screen/precentation/screens/homeScreen.dart';
+import 'package:polimer/features/profilepicture_selection/bloc/profilepicture_bloc_bloc.dart';
 import 'package:polimer/features/profilepicture_selection/precentation/widgets/profilepicture_selection_widgets.dart';
 
 class ProfilepictureSlectionScreen extends StatelessWidget {
-  const ProfilepictureSlectionScreen({super.key});
-
+  ProfilepictureSlectionScreen(
+      {super.key, required this.floatinactionButtonOnpressed});
+  Function floatinactionButtonOnpressed;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          if (FirebaseAuth.instance.currentUser!.photoURL != null) {
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+                (route) => false);
+          }
+        },
         backgroundColor: Color.fromARGB(255, 255, 111, 0),
         shape: const CircleBorder(),
         child: IconButton(
           icon: Icon(Icons.arrow_forward),
-          onPressed: () {},
+          onPressed: floatinactionButtonOnpressed(),
         ),
       ),
       body: Center(
@@ -23,11 +35,48 @@ class ProfilepictureSlectionScreen extends StatelessWidget {
           children: [
             Text(
               "Set a Profile Image",
-              style: TextStyle(fontSize: 19),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
-            CircleAvatar(
-              radius: MediaQuery.of(context).size.width / 2.5,
-              child: Image.asset("assets/images/tempprofile.webp"),
+            SizedBox(
+              height: 20,
+            ),
+            BlocBuilder<ProfilepictureBlocBloc, ProfilepictureBlocState>(
+              builder: (context, state) {
+                if (state is LoadedState) {
+                  return CircleAvatar(
+                    radius: MediaQuery.of(context).size.width / 2.5 + 5,
+                    backgroundColor: Color.fromARGB(255, 255, 111, 0),
+                    child: CircleAvatar(
+                      radius: MediaQuery.of(context).size.width / 2.5,
+                      backgroundImage: NetworkImage(
+                          FirebaseAuth.instance.currentUser!.photoURL!),
+                    ),
+                  );
+                }
+                if (state is Loadingstate) {
+                  return CircleAvatar(
+                    radius: MediaQuery.of(context).size.width / 2.5 + 5,
+                    backgroundColor: Color.fromARGB(255, 255, 111, 0),
+                    child: CircleAvatar(
+                      radius: MediaQuery.of(context).size.width / 2.5,
+                      backgroundImage:
+                          AssetImage("assets/images/tempprofile.webp"),
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  );
+                }
+                return CircleAvatar(
+                  radius: MediaQuery.of(context).size.width / 2.5 + 5,
+                  backgroundColor: Color.fromARGB(255, 255, 111, 0),
+                  child: CircleAvatar(
+                    radius: MediaQuery.of(context).size.width / 2.5,
+                    backgroundImage:
+                        AssetImage("assets/images/tempprofile.webp"),
+                  ),
+                );
+              },
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -44,6 +93,11 @@ class ProfilepictureSlectionScreen extends StatelessWidget {
                   final ImagePicker picker = ImagePicker();
                   final XFile? image =
                       await picker.pickImage(source: ImageSource.gallery);
+                  if (image != null) {
+                    context
+                        .read<ProfilepictureBlocBloc>()
+                        .add(ImageSelectedevent(image.path));
+                  }
                 }),
               ],
             )
