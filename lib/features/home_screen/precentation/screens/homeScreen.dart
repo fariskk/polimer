@@ -5,6 +5,8 @@ import 'package:polimer/features/account_screen/precentation/screens/account_scr
 import 'package:polimer/features/home_screen/precentation/widgets/homeScreen_widgets.dart';
 
 import 'package:polimer/features/new_chat/precentation/screens/newchat_screen.dart';
+import 'package:polimer/features/new_group/precentation/newgroup_screens/newgroup_screen.dart';
+import 'package:polimer/features/signin/precentation/screens/signin_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -40,13 +42,50 @@ class HomeScreen extends StatelessWidget {
                     ),
                     PopupMenuItem(
                       child: Text("New Chat"),
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => NewchatScreen()));
+                      },
                     ),
                     PopupMenuItem(
                       child: Text("New Group"),
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => NewgroupScreen()));
+                      },
                     ),
                     PopupMenuItem(
                       onTap: () {
-                        FirebaseAuth.instance.signOut();
+                        showDialog(
+                            context: context,
+                            builder: (ctx) {
+                              return AlertDialog(
+                                content:
+                                    Text("Are you sure you want to Logout"),
+                                actions: [
+                                  TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(ctx);
+                                      },
+                                      child: Text("Cancel")),
+                                  TextButton(
+                                      onPressed: () {
+                                        FirebaseAuth.instance.signOut();
+                                        Navigator.pushAndRemoveUntil(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    SigninScreen()),
+                                            (route) => false);
+                                      },
+                                      child: Text("OK"))
+                                ],
+                              );
+                            });
                       },
                       child: Text("Logout"),
                     ),

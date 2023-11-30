@@ -84,7 +84,12 @@ class ProfilepictureSlectionScreen extends StatelessWidget {
                 profileSelectionButton(Icons.camera_alt, () async {
                   final ImagePicker picker = ImagePicker();
                   final XFile? image =
-                      await picker.pickImage(source: ImageSource.gallery);
+                      await picker.pickImage(source: ImageSource.camera);
+                  if (image != null) {
+                    context
+                        .read<ProfilepictureBlocBloc>()
+                        .add(ImageSelectedevent(image.path));
+                  }
                 }),
                 SizedBox(
                   width: 50,

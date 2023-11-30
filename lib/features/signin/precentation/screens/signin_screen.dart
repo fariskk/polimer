@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:polimer/features/signin/bloc/login_bloc_bloc.dart';
 import 'package:polimer/features/signup/precentation/screens/signup_screen.dart';
 import 'package:polimer/features/signin/precentation/widgets/signin_widgets.dart';
 
@@ -10,14 +12,28 @@ class SigninScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Color.fromARGB(255, 255, 111, 0),
-        shape: const CircleBorder(),
-        child: IconButton(
-          icon: Icon(Icons.arrow_forward),
-          onPressed: () {},
-        ),
+      floatingActionButton: BlocBuilder<LoginBlocBloc, LoginBlocState>(
+        builder: (context, state) {
+          if (state is LoadingState) {
+            return FloatingActionButton(
+              onPressed: () {},
+              backgroundColor: Color.fromARGB(255, 255, 111, 0),
+              shape: const CircleBorder(),
+              child: Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+            );
+          }
+          return FloatingActionButton(
+              onPressed: () {
+                context.read<LoginBlocBloc>().add(
+                    FloatingActionButtonClickedEvent(
+                        _usernameController.text, _passwordController.text));
+              },
+              backgroundColor: Color.fromARGB(255, 255, 111, 0),
+              shape: const CircleBorder(),
+              child: Icon(Icons.arrow_forward));
+        },
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -37,6 +53,26 @@ class SigninScreen extends StatelessWidget {
                 children: [
                   myTextfield(_usernameController, "Username"),
                   myTextfield(_passwordController, "password"),
+                  BlocBuilder<LoginBlocBloc, LoginBlocState>(
+                    builder: (context, state) {
+                      if (state is SigninFaildState) {
+                        return Align(
+                            alignment: Alignment.centerLeft,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 15, bottom: 20),
+                              child: Text(
+                                state.errorMessage,
+                                style: TextStyle(
+                                  color: Color.fromARGB(255, 209, 78, 76),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ));
+                      }
+                      return Container();
+                    },
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
