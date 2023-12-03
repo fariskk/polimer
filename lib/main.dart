@@ -11,12 +11,17 @@ import 'package:polimer/features/signin/precentation/screens/signin_screen.dart'
 import 'package:polimer/features/signup/bloc/signup_bloc_bloc.dart';
 import 'package:polimer/features/signup/precentation/screens/signup_screen.dart';
 import 'package:polimer/firebase_options.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:polimer/hive/message.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await Hive.initFlutter();
+  Hive.registerAdapter(messageAdapter());
+  await Hive.openBox("messageBox");
   runApp(const MyApp());
 }
 

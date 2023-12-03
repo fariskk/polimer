@@ -1,9 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:polimer/features/chat_screen/precentation/screens/chat_screen.dart';
 
-Widget userTile(String name, String image, String lastMessage) {
+Widget userTile(
+    String name, String image, String lastMessage, BuildContext context) {
   return ListTile(
+    onTap: () {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => ChatScreen()));
+    },
     isThreeLine: true,
     title: Text(
       name,

@@ -93,8 +93,11 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: ListView.builder(itemBuilder: (context, index) {
-        return userTile("faris kk",
-            FirebaseAuth.instance.currentUser!.photoURL ?? "", "where are you");
+        return userTile(
+            "faris kk",
+            FirebaseAuth.instance.currentUser!.photoURL ?? "",
+            "where are you",
+            context);
       }),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
