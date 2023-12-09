@@ -2,8 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:polimer/features/chat_screen/bloc/chat_bloc_bloc.dart';
 
 import 'package:polimer/features/home_screen/precentation/screens/homeScreen.dart';
+import 'package:polimer/features/new_chat/bloc/newchat_bloc_bloc.dart';
 import 'package:polimer/features/profilepicture_selection/bloc/profilepicture_bloc_bloc.dart';
 import 'package:polimer/features/profilepicture_selection/precentation/screens/profilepicture_selection.dart';
 import 'package:polimer/features/signin/bloc/login_bloc_bloc.dart';
@@ -12,7 +14,8 @@ import 'package:polimer/features/signup/bloc/signup_bloc_bloc.dart';
 import 'package:polimer/features/signup/precentation/screens/signup_screen.dart';
 import 'package:polimer/firebase_options.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:polimer/hive/message.dart';
+
+import 'package:polimer/testscreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +23,10 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await Hive.initFlutter();
-  Hive.registerAdapter(messageAdapter());
+
   await Hive.openBox("messageBox");
+  await Hive.openBox("recentSearchBox");
+  await Hive.openBox("lastindexBox");
   runApp(const MyApp());
 }
 
@@ -40,6 +45,12 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (context) => ProfilepictureBlocBloc(),
+        ),
+        BlocProvider(
+          create: (context) => NewchatBlocBloc(),
+        ),
+        BlocProvider(
+          create: (context) => ChatBlocBloc(),
         ),
       ],
       child: MaterialApp(

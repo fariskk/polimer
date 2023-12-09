@@ -7,6 +7,7 @@ import 'package:polimer/features/home_screen/precentation/widgets/homeScreen_wid
 import 'package:polimer/features/new_chat/precentation/screens/newchat_screen.dart';
 import 'package:polimer/features/new_group/precentation/newgroup_screens/newgroup_screen.dart';
 import 'package:polimer/features/signin/precentation/screens/signin_screen.dart';
+import 'package:polimer/models/chat_list_model.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -28,77 +29,39 @@ class HomeScreen extends StatelessWidget {
                 Icons.search,
                 color: Colors.white,
               )),
-          PopupMenuButton(
-              iconColor: Colors.white,
-              itemBuilder: (context) => [
-                    PopupMenuItem(
-                      child: Text("Account"),
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => AccountScreen()));
-                      },
-                    ),
-                    PopupMenuItem(
-                      child: Text("New Chat"),
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => NewchatScreen()));
-                      },
-                    ),
-                    PopupMenuItem(
-                      child: Text("New Group"),
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => NewgroupScreen()));
-                      },
-                    ),
-                    PopupMenuItem(
-                      onTap: () {
-                        showDialog(
-                            context: context,
-                            builder: (ctx) {
-                              return AlertDialog(
-                                content:
-                                    Text("Are you sure you want to Logout"),
-                                actions: [
-                                  TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(ctx);
-                                      },
-                                      child: Text("Cancel")),
-                                  TextButton(
-                                      onPressed: () {
-                                        FirebaseAuth.instance.signOut();
-                                        Navigator.pushAndRemoveUntil(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    SigninScreen()),
-                                            (route) => false);
-                                      },
-                                      child: Text("OK"))
-                                ],
-                              );
-                            });
-                      },
-                      child: Text("Logout"),
-                    ),
-                  ])
+          myPopupMenuButton(),
         ],
       ),
-      body: ListView.builder(itemBuilder: (context, index) {
-        return userTile(
-            "faris kk",
-            FirebaseAuth.instance.currentUser!.photoURL ?? "",
-            "where are you",
-            context);
-      }),
+      body: StreamBuilder(
+          stream: FirebaseFirestore.instance
+              .collection("users")
+              .doc(FirebaseAuth.instance.currentUser!.email!.split("@").first)
+              .snapshots(),
+          builder: (context, AsyncSnapshot snapshot) {
+            if (snapshot.hasData) {
+              List snapshotdata = snapshot.data["chatlist"];
+
+              if (snapshotdata.isNotEmpty) {
+                final mychatlist = ChatList.fromJson(snapshot.data!.data()!);
+                return ListView.builder(
+                    itemCount: mychatlist.chatlist.length,
+                    itemBuilder: (context, index) {
+                      final userdata = mychatlist.chatlist[index];
+                      return userTile(userdata.name, userdata.image,
+                          userdata.db, "where are you", context);
+                    });
+              } else {
+                return Align(
+                  alignment: Alignment.center,
+                  child: Text("no users"),
+                );
+              }
+            } else {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+          }),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(context,

@@ -29,9 +29,12 @@ class SignupBlocBloc extends Bloc<SignupBlocEvent, SignupBlocState> {
           emit(UserNameNotAvailableStete("Username Already used"));
         } else {
           try {
-            await fir
-                .doc(event.userName)
-                .set({"username": event.userName, "passwor": event.password});
+            await fir.doc(event.userName).set({
+              "username": event.userName,
+              "password": event.password,
+              "chatlist": [],
+              "profileimage": "null"
+            });
             await FirebaseAuth.instance.createUserWithEmailAndPassword(
                 email: "${event.userName}@gmail.com",
                 password: "${event.password}");
