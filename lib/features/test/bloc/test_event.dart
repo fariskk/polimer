@@ -1,0 +1,6 @@
+part of 'test_bloc.dart';
+
+@immutable
+sealed class TestEvent {}
+
+class TestButtonClickedEvent extends TestEvent {}

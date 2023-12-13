@@ -4,10 +4,15 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:polimer/features/chat_screen/bloc/chat_bloc_bloc.dart';
 
 import 'package:polimer/features/chat_screen/precentation/widgets/chat_widgets.dart';
+import 'package:polimer/features/files_selecton/precentaion/screens/file_selection_screen.dart';
+import 'package:polimer/features/test/testscreen.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -27,12 +32,6 @@ class ChatScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(onPressed: () async {
-        final appDocumentsDir = await getTemporaryDirectory();
-        print(appDocumentsDir.path);
-
-        print(appDocumentsDir);
-      }),
       appBar: AppBar(
         leadingWidth: 31,
         leading: IconButton(
@@ -101,10 +100,13 @@ class ChatScreen extends StatelessWidget {
                                     .split("@")
                                     .first) {
                               return myMessage(
-                                  messagedata["content"], messagedata["time"]);
+                                  messagedata["content"],
+                                  messagedata["time"],
+                                  messagedata["type"],
+                                  context);
                             } else {
-                              return otherPersonMessage(
-                                  messagedata["content"], messagedata["time"]);
+                              return otherPersonMessage(messagedata["content"],
+                                  messagedata["time"], messagedata["type"]);
                             }
                           });
                     }
@@ -112,6 +114,11 @@ class ChatScreen extends StatelessWidget {
                       child: CircularProgressIndicator(),
                     );
                   })),
+          BlocBuilder<ChatBlocBloc, ChatBlocState>(
+            builder: (context, state) {
+              return Container();
+            },
+          ),
           Padding(
             padding: const EdgeInsets.all(5.0),
             child: TextField(
@@ -129,17 +136,13 @@ class ChatScreen extends StatelessWidget {
                       children: [
                         IconButton(
                             onPressed: () {
-                              showModalBottomSheet(
-                                  context: context,
-                                  builder: (context) {
-                                    return Container(
-                                      color: Colors.amber,
-                                      height: 200,
-                                    );
-                                  });
+                              if (messages.isNotEmpty) {
+                                myBottomSheet(context, db, messages,
+                                    _chatScreenScrollController);
+                              }
                             },
                             icon: Icon(
-                              Icons.attach_file,
+                              Icons.file_copy,
                               color: Color.fromARGB(255, 255, 111, 0),
                             )),
                         IconButton(
@@ -148,27 +151,16 @@ class ChatScreen extends StatelessWidget {
                             color: Color.fromARGB(255, 255, 111, 0),
                           ),
                           onPressed: () async {
-                            final now = DateTime.now();
-                            String time = "${now.hour}:${now.minute}";
-                            final fir = FirebaseFirestore.instance
-                                .collection("messages");
-                            messages.add({
-                              "content": _messageController.text,
-                              "type": "text",
-                              "sender": FirebaseAuth
-                                  .instance.currentUser!.email!
-                                  .split("@")
-                                  .first,
-                              "senderimage":
-                                  FirebaseAuth.instance.currentUser!.photoURL,
-                              "time": time
-                            });
-                            await fir.doc(db).update({"messages": messages});
-                            _messageController.text = "";
-                            FocusScope.of(context).unfocus();
-                            _chatScreenScrollController.scrollTo(
-                                index: messages.length,
-                                duration: Duration(seconds: 1));
+                            if (messages.isNotEmpty) {
+                              context.read<ChatBlocBloc>().add(
+                                  SendButtonClickedEvent(
+                                      context: context,
+                                      messageController: _messageController,
+                                      messages: messages,
+                                      db: db,
+                                      scrollcontroller:
+                                          _chatScreenScrollController));
+                            }
                           },
                         ),
                       ],

@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:polimer/features/chat_screen/bloc/chat_bloc_bloc.dart';
+import 'package:polimer/features/files_selecton/bloc/file_selection_bloc_bloc.dart';
 
 import 'package:polimer/features/home_screen/precentation/screens/homeScreen.dart';
 import 'package:polimer/features/new_chat/bloc/newchat_bloc_bloc.dart';
@@ -12,10 +13,10 @@ import 'package:polimer/features/signin/bloc/login_bloc_bloc.dart';
 import 'package:polimer/features/signin/precentation/screens/signin_screen.dart';
 import 'package:polimer/features/signup/bloc/signup_bloc_bloc.dart';
 import 'package:polimer/features/signup/precentation/screens/signup_screen.dart';
+import 'package:polimer/features/test/bloc/test_bloc.dart';
+import 'package:polimer/features/test/testscreen.dart';
 import 'package:polimer/firebase_options.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-
-import 'package:polimer/testscreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +52,12 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (context) => ChatBlocBloc(),
+        ),
+        BlocProvider(
+          create: (context) => TestBloc(),
+        ),
+        BlocProvider(
+          create: (context) => FileSelectionBlocBloc(),
         ),
       ],
       child: MaterialApp(
