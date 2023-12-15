@@ -5,7 +5,11 @@ sealed class ChatBlocState {}
 
 final class ChatBlocInitial extends ChatBlocState {}
 
-class DownloadingState extends ChatBlocState {}
+class DownloadingState extends ChatBlocState {
+  String content;
+  double progress;
+  DownloadingState({required this.content, required this.progress});
+}
 
 class DownloadingSuccessState extends ChatBlocState {}
 

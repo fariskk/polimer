@@ -7,6 +7,7 @@ import 'package:polimer/features/files_selecton/bloc/file_selection_bloc_bloc.da
 
 import 'package:polimer/features/home_screen/precentation/screens/homeScreen.dart';
 import 'package:polimer/features/new_chat/bloc/newchat_bloc_bloc.dart';
+import 'package:polimer/features/new_group/bloc/newgroup_bloc_bloc.dart';
 import 'package:polimer/features/profilepicture_selection/bloc/profilepicture_bloc_bloc.dart';
 import 'package:polimer/features/profilepicture_selection/precentation/screens/profilepicture_selection.dart';
 import 'package:polimer/features/signin/bloc/login_bloc_bloc.dart';
@@ -59,16 +60,18 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) => FileSelectionBlocBloc(),
         ),
+        BlocProvider(
+          create: (context) => NewgroupBlocBloc(),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         home: StreamBuilder(
-          stream: FirebaseAuth.instance.authStateChanges(),
+          stream: FirebaseAuth.instance.userChanges(),
           builder: (context, snapshot) {
             if (snapshot.data != null) {
               if (FirebaseAuth.instance.currentUser!.photoURL == null) {
-                return ProfilepictureSlectionScreen(
-                    floatinactionButtonOnpressed: () {});
+                return ProfilepictureSlectionScreen();
               }
               return HomeScreen();
             } else {

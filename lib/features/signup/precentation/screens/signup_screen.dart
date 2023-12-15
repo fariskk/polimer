@@ -122,12 +122,9 @@ class SignupScreen extends StatelessWidget {
                       children: [
                         const Text("Already have a account "),
                         GestureDetector(
-                          onTap: () =>
-                              Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => SigninScreen(),
-                          )),
+                          onTap: () => Navigator.of(context).pop(),
                           child: const Text(
-                            "Sign up",
+                            "Sign in",
                             style: TextStyle(color: Colors.blue),
                           ),
                         )

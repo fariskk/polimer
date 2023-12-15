@@ -7,6 +7,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meta/meta.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 part 'file_selection_bloc_event.dart';
@@ -26,13 +27,17 @@ class FileSelectionBlocBloc
         emit(UploadingState());
         final storageRef = FirebaseStorage.instance.ref();
         final imagesRef = storageRef.child(event.type);
-
+        final dir = await getApplicationDocumentsDirectory();
         for (XFile file in event.files) {
           final fileRef = imagesRef.child(file.name);
           await fileRef.putFile(
             File(file.path),
           );
+
           String fileUrl = await fileRef.getDownloadURL();
+
+          await File("${dir.path}/$fileUrl").create(recursive: true);
+          await File(file.path).copy("${dir.path}/$fileUrl");
           final now = DateTime.now();
           String time = "${now.hour}:${now.minute}";
           event.messages.add({
@@ -53,6 +58,7 @@ class FileSelectionBlocBloc
             duration: Duration(milliseconds: 500));
         emit(UploadSuccessState());
       } catch (e) {
+        print(e);
         emit(UploadFaildState());
       }
     });

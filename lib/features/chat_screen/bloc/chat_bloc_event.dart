@@ -21,3 +21,10 @@ class DownloadImageButtonClickedEvent extends ChatBlocEvent {
   String content;
   DownloadImageButtonClickedEvent({required this.content});
 }
+
+class DownloadVideoButtonClickedEvent extends ChatBlocEvent {
+  String content;
+  BuildContext context;
+  DownloadVideoButtonClickedEvent(
+      {required this.content, required this.context});
+}

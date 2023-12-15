@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:polimer/features/account_screen/precentation/screens/account_screen.dart';
 import 'package:polimer/features/chat_screen/precentation/screens/chat_screen.dart';
 import 'package:polimer/features/new_chat/precentation/screens/newchat_screen.dart';
@@ -10,7 +13,8 @@ import 'package:polimer/features/signin/precentation/screens/signin_screen.dart'
 Widget userTile(String name, String image, String db, String lastMessage,
     BuildContext context) {
   return ListTile(
-    onTap: () {
+    onTap: () async {
+      Directory dir = await getApplicationDocumentsDirectory();
       Navigator.push(
           context,
           MaterialPageRoute(
@@ -18,6 +22,7 @@ Widget userTile(String name, String image, String db, String lastMessage,
                     username: name,
                     db: db,
                     profileImage: image,
+                    dir: dir,
                   )));
     },
     isThreeLine: true,
@@ -27,6 +32,7 @@ Widget userTile(String name, String image, String db, String lastMessage,
     ),
     subtitle: Text(lastMessage),
     leading: Container(
+      height: 54,
       width: 54,
       padding: EdgeInsets.symmetric(vertical: 1.5, horizontal: 1.5),
       decoration: BoxDecoration(
@@ -88,11 +94,7 @@ Widget myPopupMenuButton() {
                           TextButton(
                               onPressed: () {
                                 FirebaseAuth.instance.signOut();
-                                Navigator.pushAndRemoveUntil(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => SigninScreen()),
-                                    (route) => false);
+                                Navigator.pop(ctx);
                               },
                               child: Text("OK"))
                         ],

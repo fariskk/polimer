@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
@@ -5,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_network_connectivity/flutter_network_connectivity.dart';
 
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,10 +21,14 @@ import 'package:path_provider/path_provider.dart';
 
 class ChatScreen extends StatelessWidget {
   ChatScreen(
-      {required this.username, required this.db, required this.profileImage});
+      {required this.username,
+      required this.db,
+      required this.profileImage,
+      required this.dir});
   String username;
   String db;
   String profileImage;
+  Directory dir;
 
   List messages = [];
 
@@ -75,6 +82,14 @@ class ChatScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
+          BlocListener<ChatBlocBloc, ChatBlocState>(
+            listener: (context, state) {
+              if (state is DownloadingFaildState) {
+                print("Faild to Download File");
+              }
+            },
+            child: Container(),
+          ),
           Expanded(
               child: StreamBuilder(
                   stream: FirebaseFirestore.instance
@@ -95,18 +110,40 @@ class ChatScreen extends StatelessWidget {
                           itemCount: messages.length,
                           itemBuilder: (context, index) {
                             final messagedata = messages[index];
-                            if (messagedata["sender"] ==
-                                FirebaseAuth.instance.currentUser!.email!
-                                    .split("@")
-                                    .first) {
-                              return myMessage(
-                                  messagedata["content"],
-                                  messagedata["time"],
-                                  messagedata["type"],
-                                  context);
-                            } else {
-                              return otherPersonMessage(messagedata["content"],
-                                  messagedata["time"], messagedata["type"]);
+
+                            switch (messagedata["type"]) {
+                              case "image":
+                                return GestureDetector(
+                                  onLongPress: () {},
+                                  child: imageMessage(
+                                      messagedata["content"],
+                                      messagedata["time"],
+                                      dir,
+                                      messagedata["sender"],
+                                      messagedata["senderimage"]),
+                                );
+                              case "video":
+                                return GestureDetector(
+                                  onLongPress: () {},
+                                  child: videoMessage(
+                                      messagedata["content"],
+                                      messagedata["time"],
+                                      dir,
+                                      messagedata["sender"],
+                                      messagedata["senderimage"]),
+                                );
+                              case "text":
+                                return GestureDetector(
+                                  onLongPress: () {},
+                                  child: textMessage(
+                                      messagedata["content"],
+                                      messagedata["sender"],
+                                      messagedata["time"],
+                                      messagedata["senderimage"]),
+                                );
+
+                              default:
+                                return Text(messagedata["content"]);
                             }
                           });
                     }
@@ -136,10 +173,8 @@ class ChatScreen extends StatelessWidget {
                       children: [
                         IconButton(
                             onPressed: () {
-                              if (messages.isNotEmpty) {
-                                myBottomSheet(context, db, messages,
-                                    _chatScreenScrollController);
-                              }
+                              myBottomSheet(context, db, messages,
+                                  _chatScreenScrollController);
                             },
                             icon: Icon(
                               Icons.file_copy,
@@ -151,7 +186,7 @@ class ChatScreen extends StatelessWidget {
                             color: Color.fromARGB(255, 255, 111, 0),
                           ),
                           onPressed: () async {
-                            if (messages.isNotEmpty) {
+                            if (_messageController.text != "") {
                               context.read<ChatBlocBloc>().add(
                                   SendButtonClickedEvent(
                                       context: context,

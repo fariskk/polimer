@@ -36,10 +36,39 @@ class ChatBlocBloc extends Bloc<ChatBlocEvent, ChatBlocState> {
     });
 
     on<DownloadImageButtonClickedEvent>((event, emit) async {
-      emit(DownloadingState());
+      emit(DownloadingState(content: event.content, progress: 0.0));
       final dir = await getApplicationDocumentsDirectory();
       Dio dio = Dio();
-      dio.download(event.content, "${dir.path}/${event.content}");
+
+      await dio.download(event.content, "${dir.path}/${event.content}",
+          onReceiveProgress: (a, b) {
+        emit(DownloadingState(content: event.content, progress: a / b));
+      });
+
+      emit(DownloadingSuccessState());
+    });
+
+    on<DownloadVideoButtonClickedEvent>((event, emit) async {
+      try {
+        emit(DownloadingState(content: event.content, progress: 0.0));
+        final dir = await getApplicationDocumentsDirectory();
+        Dio dio = Dio();
+
+        await dio.download(
+          event.content,
+          "${dir.path}/${event.content}",
+          onReceiveProgress: (a, b) {
+            emit(DownloadingState(content: event.content, progress: a / b));
+          },
+        );
+
+        emit(DownloadingSuccessState());
+      } catch (e) {
+        final dir = await getApplicationDocumentsDirectory();
+        await File("${dir.path}/${event.content}").delete();
+
+        emit(DownloadingFaildState());
+      }
     });
   }
 }

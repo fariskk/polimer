@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:polimer/features/chat_screen/bloc/chat_bloc_bloc.dart';
 import 'package:polimer/features/chat_screen/precentation/screens/chat_screen.dart';
 import 'package:polimer/features/new_chat/bloc/newchat_bloc_bloc.dart';
@@ -16,7 +19,8 @@ class NewchatScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocListener<NewchatBlocBloc, NewchatBlocState>(
-      listener: (context, state) {
+      listener: (context, state) async {
+        Directory dir = await getApplicationDocumentsDirectory();
         if (state is StartChatSuccessState) {
           Navigator.pushReplacement(
               context,
@@ -25,6 +29,7 @@ class NewchatScreen extends StatelessWidget {
                         username: state.username,
                         db: state.db,
                         profileImage: state.profileImage,
+                        dir: dir,
                       )));
         }
       },

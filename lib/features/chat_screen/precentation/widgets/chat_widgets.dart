@@ -3,157 +3,274 @@ import 'dart:io';
 import 'package:appinio_video_player/appinio_video_player.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:insta_image_viewer/insta_image_viewer.dart';
-import 'package:path_provider/path_provider.dart';
+
+import 'package:polimer/features/chat_screen/bloc/chat_bloc_bloc.dart';
 import 'package:polimer/features/chat_screen/precentation/screens/video_player_screen.dart';
+
 import 'package:polimer/features/files_selecton/precentaion/screens/file_selection_screen.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-Widget myImage(String content, String time) {
-  File? file = null;
-
+Widget imageMessage(String content, String time, Directory dir, String sender,
+    String senderimage) {
+  String myUsername =
+      FirebaseAuth.instance.currentUser!.email!.split("@").first;
   return Align(
-    alignment: Alignment.centerRight,
-    child: Container(
-      margin: const EdgeInsets.only(top: 8, bottom: 8, right: 5, left: 100),
-      padding: const EdgeInsets.only(top: 6, left: 5, right: 10, bottom: 0),
-      decoration: const BoxDecoration(
-          color: Color.fromARGB(255, 247, 168, 108),
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(12),
-              topRight: Radius.circular(12),
-              bottomLeft: Radius.circular(12))),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 5.0),
-            child: Container(
-              width: 100,
-              height: 100,
-              color: Colors.amber,
-              child: file != null
-                  ? Image.file(file)
-                  : Center(
-                      child: IconButton(
-                        onPressed: () async {
-                          print(file);
-                          final dir = await getApplicationDocumentsDirectory();
-                          file = File(dir.path + "/" + "uiuiggy");
-                          print(file);
-                        },
-                        icon: Icon(Icons.download),
-                      ),
-                    ),
-            ),
+    alignment:
+        sender == myUsername ? Alignment.centerRight : Alignment.centerLeft,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 220,
+          height: 300,
+          margin: sender == myUsername
+              ? const EdgeInsets.only(top: 8, bottom: 8, right: 5, left: 100)
+              : const EdgeInsets.only(top: 8, bottom: 8, right: 100, left: 5),
+          padding:
+              const EdgeInsets.only(top: 10, left: 10, right: 10, bottom: 0),
+          decoration: const BoxDecoration(
+              color: Color.fromARGB(255, 250, 216, 185),
+              borderRadius: BorderRadius.all(Radius.circular(15))),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    sender,
+                    style: const TextStyle(
+                        fontSize: 14, color: Color.fromARGB(255, 53, 52, 82)),
+                  ),
+                  Text(
+                    time,
+                    style: const TextStyle(fontSize: 11),
+                  )
+                ],
+              ),
+              BlocBuilder<ChatBlocBloc, ChatBlocState>(
+                buildWhen: (Prervious, current) =>
+                    current is DownloadingState && current.content == content ||
+                    current is DownloadingSuccessState,
+                builder: (context, state) {
+                  if (state is DownloadingState) {
+                    return Container(
+                      height: 250,
+                      width: 200,
+                      child: Center(
+                          child: CircularProgressIndicator(
+                        value: state.progress,
+                      )),
+                    );
+                  }
+                  return Container(
+                    width: 200,
+                    height: 250,
+                    child: File("${dir.path}/$content").existsSync()
+                        ? InstaImageViewer(
+                            disableSwipeToDismiss: true,
+                            child: ClipRRect(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(10)),
+                              child: Image.file(
+                                filterQuality: FilterQuality.high,
+                                File("${dir.path}/$content"),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          )
+                        : Center(
+                            child: IconButton(
+                              onPressed: () async {
+                                context.read<ChatBlocBloc>().add(
+                                    DownloadImageButtonClickedEvent(
+                                        content: content));
+                              },
+                              icon: const Icon(
+                                Icons.download,
+                                size: 50,
+                              ),
+                            ),
+                          ),
+                  );
+                },
+              ),
+            ],
           ),
-          Text(
-            time,
-            style: const TextStyle(fontSize: 11),
-          )
-        ],
-      ),
+        ),
+        sender != myUsername
+            ? CircleAvatar(
+                radius: 20,
+                backgroundImage: CachedNetworkImageProvider(
+                  senderimage,
+                ),
+              )
+            : SizedBox(),
+      ],
     ),
   );
 }
 
-Widget myMessage(
-    String content, String time, String type, BuildContext context) {
-  if (type == "text") {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Container(
-        margin: const EdgeInsets.only(top: 8, bottom: 8, right: 5, left: 100),
-        padding: const EdgeInsets.only(top: 6, left: 5, right: 10, bottom: 0),
-        decoration: const BoxDecoration(
-            color: Color.fromARGB(255, 247, 168, 108),
-            borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-                bottomLeft: Radius.circular(12))),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(right: 5.0),
-              child: Text(content, style: const TextStyle(fontSize: 17)),
-            ),
-            Text(
-              time,
-              style: const TextStyle(fontSize: 11),
-            )
-          ],
+Widget videoMessage(String content, String time, Directory dir, String sender,
+    String senderimage) {
+  String myUsername =
+      FirebaseAuth.instance.currentUser!.email!.split("@").first;
+  return Align(
+    alignment:
+        sender == myUsername ? Alignment.centerRight : Alignment.centerLeft,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 300,
+          width: 220,
+          margin: sender == myUsername
+              ? const EdgeInsets.only(top: 8, bottom: 8, right: 5, left: 100)
+              : const EdgeInsets.only(top: 8, bottom: 8, right: 100, left: 5),
+          padding:
+              const EdgeInsets.only(top: 10, left: 10, right: 10, bottom: 10),
+          decoration: const BoxDecoration(
+              color: Color.fromARGB(255, 250, 216, 185),
+              borderRadius: BorderRadius.all(Radius.circular(15))),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    sender,
+                    style: const TextStyle(
+                        fontSize: 14, color: Color.fromARGB(255, 53, 52, 82)),
+                  ),
+                  Text(
+                    time,
+                    style: const TextStyle(fontSize: 11),
+                  )
+                ],
+              ),
+              SizedBox(
+                height: 3,
+              ),
+              BlocBuilder<ChatBlocBloc, ChatBlocState>(
+                buildWhen: (Prervious, current) =>
+                    current is DownloadingState && current.content == content ||
+                    current is DownloadingSuccessState,
+                builder: (context, state) {
+                  if (state is DownloadingState) {
+                    return Container(
+                      height: 250,
+                      width: 200,
+                      child: Center(
+                          child: CircularProgressIndicator(
+                        value: state.progress,
+                      )),
+                    );
+                  }
+                  return Container(
+                    width: 200,
+                    height: 250,
+                    color: File("${dir.path}/$content").existsSync()
+                        ? Colors.black
+                        : const Color.fromARGB(255, 250, 216, 185),
+                    child: File("${dir.path}/$content").existsSync()
+                        ? IconButton(
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => VideoPlayerScreen(
+                                          video: content, dir: dir)));
+                            },
+                            icon: const Icon(
+                              Icons.play_circle,
+                              size: 55,
+                              color: Colors.white,
+                            ))
+                        : Center(
+                            child: IconButton(
+                              onPressed: () async {
+                                context.read<ChatBlocBloc>().add(
+                                    DownloadVideoButtonClickedEvent(
+                                        context: context, content: content));
+                              },
+                              icon: const Icon(
+                                Icons.play_circle,
+                                size: 55,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
-      ),
-    );
-  } else {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Container(
-        margin: const EdgeInsets.only(top: 8, bottom: 8, right: 5, left: 100),
-        padding: const EdgeInsets.only(top: 6, left: 5, right: 10, bottom: 0),
-        decoration: const BoxDecoration(
-            color: Color.fromARGB(255, 247, 168, 108),
-            borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-                bottomLeft: Radius.circular(12))),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Padding(
-                padding: const EdgeInsets.only(right: 5.0),
-                child: type == "image"
-                    ? myImage(content, time)
-                    : IconButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => VideoPlayerScreen(
-                                        videoUrl: content,
-                                      )));
-                        },
-                        icon: const Icon(Icons.play_arrow))),
-            Text(
-              time,
-              style: const TextStyle(fontSize: 11),
-            )
-          ],
-        ),
-      ),
-    );
-  }
+        sender != myUsername
+            ? CircleAvatar(
+                backgroundImage: CachedNetworkImageProvider(senderimage),
+              )
+            : SizedBox(),
+      ],
+    ),
+  );
 }
 
-Widget otherPersonMessage(String message, String time, String type) {
+Widget textMessage(
+    String content, String sender, String time, String senderimage) {
+  String myUsername =
+      FirebaseAuth.instance.currentUser!.email!.split("@").first;
   return Align(
-    alignment: Alignment.centerLeft,
-    child: Container(
-      margin: const EdgeInsets.only(top: 8, bottom: 8, right: 100, left: 5),
-      padding: const EdgeInsets.only(top: 6, left: 10, right: 5, bottom: 8),
-      decoration: const BoxDecoration(
-          color: Color.fromARGB(255, 247, 168, 108),
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(12),
-              topRight: Radius.circular(12),
-              bottomRight: Radius.circular(12))),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 5.0),
-            child: Text(message, style: const TextStyle(fontSize: 17)),
+    alignment:
+        sender == myUsername ? Alignment.centerRight : Alignment.centerLeft,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: sender == myUsername
+              ? const EdgeInsets.only(top: 8, bottom: 8, right: 5, left: 100)
+              : const EdgeInsets.only(top: 8, bottom: 8, right: 100, left: 5),
+          padding: const EdgeInsets.only(top: 6, left: 7, right: 7, bottom: 0),
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 252, 203, 158),
+            borderRadius: sender == myUsername
+                ? const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                    bottomLeft: Radius.circular(12))
+                : const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                    bottomRight: Radius.circular(12)),
           ),
-          Text(
-            time,
-            style: const TextStyle(fontSize: 11),
-          )
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                sender,
+                style: const TextStyle(
+                    fontSize: 14, color: Color.fromARGB(255, 53, 52, 82)),
+              ),
+              Text(content, style: const TextStyle(fontSize: 17)),
+              Text(
+                time,
+                style: const TextStyle(fontSize: 10),
+              ),
+            ],
+          ),
+        ),
+        sender != myUsername
+            ? CircleAvatar(
+                backgroundImage: CachedNetworkImageProvider(senderimage),
+              )
+            : SizedBox(),
+      ],
     ),
   );
 }
@@ -172,8 +289,9 @@ myBottomSheet(BuildContext context, String db, List messages,
                   label: const Text("Send Video"),
                   onPressed: () async {
                     final ImagePicker picker = ImagePicker();
-                    XFile? video =
-                        await picker.pickVideo(source: ImageSource.gallery);
+                    XFile? video = await picker.pickVideo(
+                      source: ImageSource.gallery,
+                    );
                     if (video != null) {
                       Navigator.push(
                           context,
