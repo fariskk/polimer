@@ -23,3 +23,15 @@ class StartChatSuccessState extends NewgroupBlocState {
 class StartChatfaildState extends NewgroupBlocState {}
 
 class LoadingState extends NewgroupBlocState {}
+
+class CreateGroupSuccessState extends NewgroupBlocState {
+  Directory dir;
+  String Username;
+  String ProfileImage;
+  String db;
+  CreateGroupSuccessState(
+      {required this.ProfileImage,
+      required this.Username,
+      required this.db,
+      required this.dir});
+}

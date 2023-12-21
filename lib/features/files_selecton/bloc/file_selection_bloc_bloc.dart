@@ -54,8 +54,7 @@ class FileSelectionBlocBloc
               .update({"messages": event.messages});
         }
         event.scrollController.scrollTo(
-            index: event.messages.length,
-            duration: Duration(milliseconds: 500));
+            index: event.messages.length, duration: Duration(seconds: 1));
         emit(UploadSuccessState());
       } catch (e) {
         print(e);

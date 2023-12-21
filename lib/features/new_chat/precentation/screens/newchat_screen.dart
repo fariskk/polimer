@@ -39,7 +39,7 @@ class NewchatScreen extends StatelessWidget {
             children: [
               ListTile(
                 onTap: () {
-                  Navigator.push(
+                  Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                           builder: (context) => NewgroupScreen()));
@@ -104,6 +104,17 @@ class NewchatScreen extends StatelessWidget {
               BlocBuilder<NewchatBlocBloc, NewchatBlocState>(
                 builder: (context, state) {
                   if (state is SerachSuccessState) {
+                    if (state.searchResult.length == 0) {
+                      return Padding(
+                        padding: const EdgeInsets.all(18.0),
+                        child: Center(
+                          child: Text(
+                            "User Not Exist",
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      );
+                    }
                     return Expanded(
                       child: ListView.builder(
                           itemCount: state.searchResult.length,

@@ -126,6 +126,7 @@ class FileSelectionScreen extends StatelessWidget {
                                 child: Image.file(
                                   File(files[index].path),
                                   fit: BoxFit.cover,
+                                  cacheHeight: 150,
                                 ),
                               ),
                               BlocBuilder<FileSelectionBlocBloc,

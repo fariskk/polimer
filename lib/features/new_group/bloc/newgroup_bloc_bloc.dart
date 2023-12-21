@@ -4,6 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:meta/meta.dart';
+import 'package:path_provider/path_provider.dart';
 
 part 'newgroup_bloc_event.dart';
 part 'newgroup_bloc_state.dart';
@@ -25,6 +26,8 @@ class NewgroupBlocBloc extends Bloc<NewgroupBlocEvent, NewgroupBlocState> {
       emit(NewgroupBlocInitial());
     });
     on<CreatGroupButtonClickedEvent>((event, emit) async {
+      final dir = await getApplicationDocumentsDirectory();
+      emit(LoadingState());
       final meessageRef = FirebaseFirestore.instance.collection("messages");
       final userRef = FirebaseFirestore.instance.collection("users");
       final storageRef = FirebaseStorage.instance.ref();
@@ -48,6 +51,11 @@ class NewgroupBlocBloc extends Bloc<NewgroupBlocEvent, NewgroupBlocState> {
         oldChats.add(groupDetails);
         await userRef.doc(user["username"]).update({"chatlist": oldChats});
       }
+      emit(CreateGroupSuccessState(
+          ProfileImage: profileUrl,
+          Username: event.name,
+          db: dbName,
+          dir: dir));
     });
   }
 }

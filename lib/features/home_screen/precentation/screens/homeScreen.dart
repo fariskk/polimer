@@ -42,18 +42,20 @@ class HomeScreen extends StatelessWidget {
               List snapshotdata = snapshot.data["chatlist"];
 
               if (snapshotdata.isNotEmpty) {
-                final mychatlist = ChatList.fromJson(snapshot.data!.data()!);
+                ChatList mychatlist = ChatList.fromJson(snapshot.data!.data()!);
+
                 return ListView.builder(
                     itemCount: mychatlist.chatlist.length,
                     itemBuilder: (context, index) {
                       final userdata = mychatlist.chatlist[index];
+                      List a = ["hi", "Where are Your", "its ok", "hi all"];
                       return userTile(userdata.name, userdata.image,
-                          userdata.db, "where are you", context);
+                          userdata.db, a[index], context, index, mychatlist);
                     });
               } else {
                 return Align(
                   alignment: Alignment.center,
-                  child: Text("no users"),
+                  child: Text("No Users"),
                 );
               }
             } else {

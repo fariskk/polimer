@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:polimer/features/chat_screen/bloc/chat_bloc_bloc.dart';
 import 'package:polimer/features/files_selecton/bloc/file_selection_bloc_bloc.dart';
+import 'package:polimer/features/home_screen/bloc/homepage_bloc_bloc.dart';
 
 import 'package:polimer/features/home_screen/precentation/screens/homeScreen.dart';
+import 'package:polimer/features/message_forward/bloc/message_forward_bloc.dart';
 import 'package:polimer/features/new_chat/bloc/newchat_bloc_bloc.dart';
 import 'package:polimer/features/new_group/bloc/newgroup_bloc_bloc.dart';
 import 'package:polimer/features/profilepicture_selection/bloc/profilepicture_bloc_bloc.dart';
@@ -62,6 +64,12 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (context) => NewgroupBlocBloc(),
+        ),
+        BlocProvider(
+          create: (context) => HomepageBlocBloc(),
+        ),
+        BlocProvider(
+          create: (context) => MessageForwardBloc(),
         ),
       ],
       child: MaterialApp(

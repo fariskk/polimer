@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +19,7 @@ import 'package:polimer/features/files_selecton/precentaion/screens/file_selecti
 import 'package:polimer/features/test/testscreen.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:social_media_recorder/screen/social_media_recorder.dart';
 
 class ChatScreen extends StatelessWidget {
   ChatScreen(
@@ -31,7 +33,7 @@ class ChatScreen extends StatelessWidget {
   Directory dir;
 
   List messages = [];
-
+  List<XFile> clippedMessage = [];
   final _messageController = TextEditingController();
 
   ItemScrollController _chatScreenScrollController = ItemScrollController();
@@ -40,7 +42,7 @@ class ChatScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leadingWidth: 31,
+        leadingWidth: 35,
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back,
@@ -81,6 +83,7 @@ class ChatScreen extends StatelessWidget {
         backgroundColor: Color.fromARGB(255, 255, 111, 0),
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           BlocListener<ChatBlocBloc, ChatBlocState>(
             listener: (context, state) {
@@ -103,7 +106,11 @@ class ChatScreen extends StatelessWidget {
                       int lastindex =
                           lastindexBox.get("${username}lastindex") ?? 0;
                       lastindexBox.put("${username}lastindex", messages.length);
-
+                      if (messages.length == 0) {
+                        return Center(
+                          child: Text("No Chats"),
+                        );
+                      }
                       return ScrollablePositionedList.builder(
                           initialScrollIndex: lastindex,
                           itemScrollController: _chatScreenScrollController,
@@ -114,7 +121,17 @@ class ChatScreen extends StatelessWidget {
                             switch (messagedata["type"]) {
                               case "image":
                                 return GestureDetector(
-                                  onLongPress: () {},
+                                  onLongPress: () {
+                                    messagePopup(
+                                        context,
+                                        db,
+                                        dir,
+                                        messagedata["content"],
+                                        index,
+                                        messages,
+                                        messagedata["type"],
+                                        messagedata);
+                                  },
                                   child: imageMessage(
                                       messagedata["content"],
                                       messagedata["time"],
@@ -122,9 +139,40 @@ class ChatScreen extends StatelessWidget {
                                       messagedata["sender"],
                                       messagedata["senderimage"]),
                                 );
+                              case "clippedimage":
+                                return GestureDetector(
+                                  onLongPress: () {
+                                    messagePopup(
+                                        context,
+                                        db,
+                                        dir,
+                                        messagedata["content"],
+                                        index,
+                                        messages,
+                                        messagedata["type"],
+                                        messagedata);
+                                  },
+                                  child: clippedImageMessage(
+                                      messagedata["content"],
+                                      messagedata["subcontent"],
+                                      messagedata["time"],
+                                      dir,
+                                      messagedata["sender"],
+                                      messagedata["senderimage"]),
+                                );
                               case "video":
                                 return GestureDetector(
-                                  onLongPress: () {},
+                                  onLongPress: () {
+                                    messagePopup(
+                                        context,
+                                        db,
+                                        dir,
+                                        messagedata["content"],
+                                        index,
+                                        messages,
+                                        messagedata["type"],
+                                        messagedata);
+                                  },
                                   child: videoMessage(
                                       messagedata["content"],
                                       messagedata["time"],
@@ -134,16 +182,45 @@ class ChatScreen extends StatelessWidget {
                                 );
                               case "text":
                                 return GestureDetector(
-                                  onLongPress: () {},
+                                  onLongPress: () {
+                                    messagePopup(
+                                        context,
+                                        db,
+                                        dir,
+                                        messagedata["content"],
+                                        index,
+                                        messages,
+                                        messagedata["type"],
+                                        messagedata);
+                                  },
                                   child: textMessage(
                                       messagedata["content"],
                                       messagedata["sender"],
                                       messagedata["time"],
                                       messagedata["senderimage"]),
                                 );
+                              case "audio":
+                                return GestureDetector(
+                                    onLongPress: () {
+                                      messagePopup(
+                                          context,
+                                          db,
+                                          dir,
+                                          messagedata["content"],
+                                          index,
+                                          messages,
+                                          messagedata["type"],
+                                          messagedata);
+                                    },
+                                    child: audioMessage(
+                                        messagedata["content"],
+                                        messagedata["sender"],
+                                        messagedata["senderimage"],
+                                        messagedata["time"],
+                                        context));
 
                               default:
-                                return Text(messagedata["content"]);
+                                return SizedBox();
                             }
                           });
                     }
@@ -153,7 +230,64 @@ class ChatScreen extends StatelessWidget {
                   })),
           BlocBuilder<ChatBlocBloc, ChatBlocState>(
             builder: (context, state) {
-              return Container();
+              return Visibility(
+                visible: clippedMessage.isNotEmpty,
+                child: Container(
+                  height: 100,
+                  width: 100,
+                  color: Colors.amber,
+                  child: clippedMessage.isNotEmpty
+                      ? Stack(
+                          children: [
+                            Container(
+                              margin: EdgeInsets.all(2),
+                              width: 100,
+                              height: 100,
+                              color: Color.fromARGB(255, 255, 111, 0),
+                              child: Image.file(
+                                File(clippedMessage.first.path),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            state is ClippedMessageUploadingState
+                                ? Center(
+                                    child: CircularProgressIndicator(),
+                                  )
+                                : IconButton(
+                                    onPressed: () {
+                                      clippedMessage.removeAt(0);
+                                      context
+                                          .read<ChatBlocBloc>()
+                                          .add(ReloadEvent());
+                                    },
+                                    icon: Icon(Icons.cancel))
+                          ],
+                        )
+                      : SizedBox(),
+                ),
+              );
+            },
+          ),
+          BlocBuilder<ChatBlocBloc, ChatBlocState>(
+            builder: (context, state) {
+              if (state is VoiceRecordingState) {
+                return Align(
+                  alignment: Alignment.centerRight,
+                  child: SocialMediaRecorder(
+                      backGroundColor: Colors.white,
+                      stopRecording: (String time) {
+                        context.read<ChatBlocBloc>().add(ReloadEvent());
+                      },
+                      sendRequestFunction: (File file, String time) {
+                        context.read<ChatBlocBloc>().add(StopVoiceRecordEvent(
+                            audioFile: file,
+                            db: db,
+                            scrollcontroller: _chatScreenScrollController,
+                            messages: messages));
+                      }),
+                );
+              }
+              return SizedBox();
             },
           ),
           Padding(
@@ -161,6 +295,7 @@ class ChatScreen extends StatelessWidget {
             child: TextField(
               controller: _messageController,
               decoration: InputDecoration(
+                  hintText: "Type your Message here..",
                   enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: Color.fromARGB(255, 255, 111, 0), width: 1.8)),
@@ -168,25 +303,41 @@ class ChatScreen extends StatelessWidget {
                       borderSide: BorderSide(
                           color: Color.fromARGB(255, 255, 111, 0), width: 1.8)),
                   suffixIcon: Container(
-                    width: 102,
+                    width: 150,
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         IconButton(
+                            iconSize: 23,
                             onPressed: () {
                               myBottomSheet(context, db, messages,
-                                  _chatScreenScrollController);
+                                  _chatScreenScrollController, clippedMessage);
                             },
                             icon: Icon(
                               Icons.file_copy,
                               color: Color.fromARGB(255, 255, 111, 0),
                             )),
+                        Container(
+                          child: GestureDetector(
+                            onTap: () {
+                              context
+                                  .read<ChatBlocBloc>()
+                                  .add(StartVoiceRecordEvent());
+                            },
+                            child: Icon(
+                              Icons.mic,
+                              color: Color.fromARGB(255, 255, 111, 0),
+                            ),
+                          ),
+                        ),
                         IconButton(
                           icon: Icon(
                             Icons.send,
                             color: Color.fromARGB(255, 255, 111, 0),
                           ),
                           onPressed: () async {
-                            if (_messageController.text != "") {
+                            if (_messageController.text != "" ||
+                                clippedMessage.isNotEmpty) {
                               context.read<ChatBlocBloc>().add(
                                   SendButtonClickedEvent(
                                       context: context,
@@ -194,7 +345,8 @@ class ChatScreen extends StatelessWidget {
                                       messages: messages,
                                       db: db,
                                       scrollcontroller:
-                                          _chatScreenScrollController));
+                                          _chatScreenScrollController,
+                                      clippedMessage: clippedMessage));
                             }
                           },
                         ),

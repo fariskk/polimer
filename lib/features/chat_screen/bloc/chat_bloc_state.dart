@@ -14,3 +14,17 @@ class DownloadingState extends ChatBlocState {
 class DownloadingSuccessState extends ChatBlocState {}
 
 class DownloadingFaildState extends ChatBlocState {}
+
+class DeletingState extends ChatBlocState {}
+
+class DeletingFaildState extends ChatBlocState {}
+
+class DeletingSuccessState extends ChatBlocState {}
+
+class ClippedMessageUploadingState extends ChatBlocState {}
+
+class ClippedMessageUploadingsuccessState extends ChatBlocState {}
+
+class VoiceRecordingState extends ChatBlocState {}
+
+class VoiceUploadingState extends ChatBlocState {}

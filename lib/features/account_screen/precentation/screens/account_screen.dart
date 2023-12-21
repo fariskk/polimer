@@ -1,4 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:polimer/features/profilepicture_selection/precentation/screens/profilepicture_selection.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -25,16 +28,17 @@ class AccountScreen extends StatelessWidget {
                       radius: 33,
                       backgroundColor: Colors.white,
                       child: CircleAvatar(
-                        backgroundImage:
-                            AssetImage("assets/images/tempprofile.webp"),
-                        radius: 30,
-                      ),
+                          radius: 30,
+                          backgroundImage: CachedNetworkImageProvider(
+                              FirebaseAuth.instance.currentUser!.photoURL!)),
                     ),
                     SizedBox(
                       width: 15,
                     ),
                     Text(
-                      "faris kk",
+                      FirebaseAuth.instance.currentUser!.email!
+                          .split("@")
+                          .first,
                       style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -42,8 +46,9 @@ class AccountScreen extends StatelessWidget {
                     )
                   ],
                 ),
-                TextButton(
-                    onPressed: () {}, child: Text("Change Profile Image"))
+                SizedBox(
+                  height: 15,
+                )
               ],
             ),
           ),
@@ -51,6 +56,10 @@ class AccountScreen extends StatelessWidget {
             child: SizedBox(),
           ),
           ListTile(
+            onTap: () {
+              Navigator.pop(context);
+              FirebaseAuth.instance.signOut();
+            },
             leading: Icon(Icons.logout),
             title: Text(
               "Logout",

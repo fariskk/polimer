@@ -21,13 +21,41 @@ class ChatBlocBloc extends Bloc<ChatBlocEvent, ChatBlocState> {
       final now = DateTime.now();
       String time = "${now.hour}:${now.minute}";
       final fir = FirebaseFirestore.instance.collection("messages");
-      event.messages.add({
-        "content": event.messageController.text,
-        "type": "text",
-        "sender": FirebaseAuth.instance.currentUser!.email!.split("@").first,
-        "senderimage": FirebaseAuth.instance.currentUser!.photoURL,
-        "time": time
-      });
+      if (event.clippedMessage.isNotEmpty) {
+        emit(ClippedMessageUploadingState());
+        final storageRef = FirebaseStorage.instance.ref();
+        final imagesRef = storageRef.child("image");
+        final dir = await getApplicationDocumentsDirectory();
+
+        final fileRef = imagesRef.child(event.clippedMessage.first.name);
+        await fileRef.putFile(
+          File(event.clippedMessage.first.path),
+        );
+        String fileUrl = await fileRef.getDownloadURL();
+        await File("${dir.path}/$fileUrl").create(recursive: true);
+        await File(event.clippedMessage.first.path)
+            .copy("${dir.path}/$fileUrl");
+        event.messages.add({
+          "content": fileUrl,
+          "type": "clippedimage",
+          "subcontent": event.messageController.text,
+          "sender": FirebaseAuth.instance.currentUser!.email!.split("@").first,
+          "senderimage": FirebaseAuth.instance.currentUser!.photoURL,
+          "time": time
+        });
+        event.clippedMessage.removeAt(0);
+        event.scrollcontroller.scrollTo(
+            index: event.messages.length, duration: Duration(seconds: 1));
+        emit(ClippedMessageUploadingsuccessState());
+      } else {
+        event.messages.add({
+          "content": event.messageController.text,
+          "type": "text",
+          "sender": FirebaseAuth.instance.currentUser!.email!.split("@").first,
+          "senderimage": FirebaseAuth.instance.currentUser!.photoURL,
+          "time": time
+        });
+      }
       await fir.doc(event.db).update({"messages": event.messages});
       event.messageController.text = "";
       FocusScope.of(event.context).unfocus();
@@ -69,6 +97,54 @@ class ChatBlocBloc extends Bloc<ChatBlocEvent, ChatBlocState> {
 
         emit(DownloadingFaildState());
       }
+    });
+
+    on<DeleteMessageButtonClickedEvent>((event, emit) async {
+      try {
+        emit(DeletingState());
+        if (File("${event.dir.path}/${event.filepath}").existsSync() &&
+            event.type != "text") {
+          await File("${event.dir.path}/${event.filepath}").delete();
+        }
+        final fir = FirebaseFirestore.instance.collection("messages");
+        event.messages.removeAt(event.index);
+        await fir.doc(event.db).update({"messages": event.messages});
+        emit(DeletingSuccessState());
+      } catch (e) {
+        print(e);
+        emit(DeletingFaildState());
+      }
+    });
+
+    on<ReloadEvent>((event, emit) {
+      emit(ChatBlocInitial());
+    });
+    on<StartVoiceRecordEvent>((event, emit) {
+      emit(VoiceRecordingState());
+    });
+
+    on<StopVoiceRecordEvent>((event, emit) async {
+      emit(VoiceUploadingState());
+
+      final now = DateTime.now();
+      String time = "${now.hour}:${now.minute}";
+      final fir = FirebaseFirestore.instance.collection("messages");
+      final storageRef = FirebaseStorage.instance.ref();
+      final audioRef = storageRef.child("audio/${event.db}/$now");
+      await audioRef.putFile(event.audioFile);
+      String fileUrl = await audioRef.getDownloadURL();
+
+      event.messages.add({
+        "content": fileUrl,
+        "sender": FirebaseAuth.instance.currentUser!.email!.split("@").first,
+        "senderimage": FirebaseAuth.instance.currentUser!.photoURL,
+        "time": time,
+        "type": "audio"
+      });
+      await fir.doc(event.db).update({"messages": event.messages});
+      event.scrollcontroller.scrollTo(
+          index: event.messages.length, duration: Duration(seconds: 1));
+      emit(ChatBlocInitial());
     });
   }
 }
